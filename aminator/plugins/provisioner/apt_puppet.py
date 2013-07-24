@@ -108,19 +108,8 @@ class AptPuppetProvisionerPlugin(AptProvisionerPlugin):
         context = self._config.context
         config = self._config
 
-        # TODO
-	# generate the certificate or check that the specified file exists
-	generate_certificate(context.package.arg)
-
-        self.make_puppet_certs_dir()
-	self.copy_puppet_certs(context.package.arg)
-
         with Chroot(self._mountpoint):
             log.debug('Inside chroot')
-
-            apt_get_update
-            log.info('Installing puppet agent')
-            apt_get_install("puppet")
             
             log.info('Running puppet agent')
             result = puppet(context.package.arg, context.puppet.get('puppet_master_hostname', socket.gethostname()), context.puppet.get('puppet_env', 'production'))
@@ -138,8 +127,6 @@ class AptPuppetProvisionerPlugin(AptProvisionerPlugin):
 
             
             self._store_package_metadata()
-
-        self.make_puppet_certs_dir()
         log.debug('Exited chroot')
 
         log.info('Provisioning succeeded!')
@@ -150,12 +137,3 @@ class AptPuppetProvisionerPlugin(AptProvisionerPlugin):
 @command()
 def puppet(certname, puppet_master_hostname, puppet_env):
     return 'puppet agent --detailed-exitcodes --color=false --no-daemonize --logdest console --onetime --certname {0} --server {1} --env {2}'.format(certname, puppet_master_hostname, puppet_env)
-
-@command()
-def generate_certificate(certname):
-    log.debug('Generating certificate for {0}'.format(certname))
-    return 'puppetca generate {0}'.format(certname)
-
-
-
-
