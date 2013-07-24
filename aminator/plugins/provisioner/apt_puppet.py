@@ -59,6 +59,10 @@ class AptPuppetProvisionerPlugin(AptProvisionerPlugin):
                                     action=conf_action(config=context.puppet),
                                     help='The puppet master hostname')
 
+        puppet_config.add_argument('-E', '--puppet-env', dest='puppet_env',
+                                    action=conf_action(config=context.puppet),
+                                    help='The puppet env')
+
 
     def _store_package_metadata(self):
         """
@@ -119,7 +123,7 @@ class AptPuppetProvisionerPlugin(AptProvisionerPlugin):
             apt_get_install("puppet")
             
             log.info('Running puppet agent')
-            result = puppet(context.package.arg, context.puppet.get('puppet_master_hostname', socket.gethostname()))
+            result = puppet(context.package.arg, context.puppet.get('puppet_master_hostname', socket.gethostname()), context.puppet.get('puppet_env', 'production'))
             self.rm_puppet_certs_dirs()
 
             # * --detailed-exitcodes:
@@ -144,8 +148,8 @@ class AptPuppetProvisionerPlugin(AptProvisionerPlugin):
 
 
 @command()
-def puppet(certname, puppet_master_hostname):
-    return 'puppet agent --detailed-exitcodes --color=false --no-daemonize --logdest console --onetime --certname {0} --server {1}'.format(certname, puppet_master_hostname)
+def puppet(certname, puppet_master_hostname, puppet_env):
+    return 'puppet agent --detailed-exitcodes --color=false --no-daemonize --logdest console --onetime --certname {0} --server {1} --env {2}'.format(certname, puppet_master_hostname, puppet_env)
 
 @command()
 def generate_certificate(certname):
